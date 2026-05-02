@@ -20,6 +20,8 @@ A Python tool that fetches live stock data from Norway's three largest salmon co
 4. Run: `python3 main.py`
 
 ## Example output
+![Salmon Industry Analysis](lakseindustri.png)
+
 The tool generates a dual chart showing 12 months of stock performance and an AI-written market analysis.
 
 ## Background
