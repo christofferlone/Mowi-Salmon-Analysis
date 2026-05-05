@@ -6,6 +6,11 @@ import feedparser
 from newsapi import NewsApiClient
 from groq import Groq
 import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -236,3 +241,51 @@ print("\n=== MARKEDSANALYSE & FORHANDLINGSSTRATEGI ===")
 print(markedsanalyse.choices[0].message.content)
 print("\n=== PESTEL-ANALYSE ===")
 print(pestel.choices[0].message.content)
+
+# === E-POST ===
+def send_rapport(markedsanalyse_tekst, pestel_tekst, graf_fil):
+    sender = os.getenv("EMAIL_SENDER")
+    passord = os.getenv("EMAIL_PASSWORD")
+    mottaker = os.getenv("EMAIL_RECEIVER")
+    dato = datetime.now().strftime("%d.%m.%Y")
+
+    msg = MIMEMultipart("related")
+    msg["Subject"] = f"🐟 Laksemarked ukesrapport – {dato}"
+    msg["From"] = sender
+    msg["To"] = mottaker
+
+    html = f"""
+    <html><body style="font-family: Arial, sans-serif; max-width: 800px; margin: auto;">
+    <h1 style="color: #e63946;">🐟 Laksemarked – {dato}</h1>
+    <p><b>Siste laksepris:</b> {siste_pris} kr/kg &nbsp;|&nbsp;
+       <b>Endring:</b> {prisendring:.2f} kr/kg &nbsp;|&nbsp;
+       <b>Eksportvolum:</b> {siste_volum} tonn</p>
+    <img src="cid:graf" style="width:100%; border-radius:8px; margin: 20px 0;">
+    <h2 style="color: #333;">📊 Markedsanalyse & Forhandlingsstrategi</h2>
+    <pre style="background:#f5f5f5; padding:15px; border-radius:8px; white-space:pre-wrap;">{markedsanalyse_tekst}</pre>
+    <h2 style="color: #333;">🌍 PESTEL-analyse</h2>
+    <pre style="background:#f5f5f5; padding:15px; border-radius:8px; white-space:pre-wrap;">{pestel_tekst}</pre>
+    <p style="color:#999; font-size:12px;">Automatisk generert av Salmon Market Intelligence Tool</p>
+    </body></html>
+    """
+
+    msg.attach(MIMEText(html, "html"))
+
+    with open(graf_fil, "rb") as f:
+        img = MIMEImage(f.read())
+        img.add_header("Content-ID", "<graf>")
+        msg.attach(img)
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender, passord)
+            server.sendmail(sender, mottaker, msg.as_string())
+        print("E-post sendt ✅")
+    except Exception as e:
+        print(f"E-post feilet: {e}")
+
+send_rapport(
+    markedsanalyse.choices[0].message.content,
+    pestel.choices[0].message.content,
+    "lakseindustri.png"
+)
