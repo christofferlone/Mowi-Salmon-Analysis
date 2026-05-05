@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -165,7 +167,6 @@ if ssb_ok:
 
 plt.tight_layout()
 plt.savefig("lakseindustri.png", dpi=150)
-plt.show()
 print("Graf lagret!")
 
 # === AI-ANALYSE ===

@@ -1,0 +1,31 @@
+name: Daily Salmon Report
+
+on:
+  schedule:
+    - cron: '15 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas matplotlib groq python-dotenv newsapi-python feedparser requests
+
+      - name: Run report
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
+        run: python3 main.py
